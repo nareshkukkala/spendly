@@ -6,55 +6,65 @@
 
 <section class="hero">
     <div class="hero-inner">
-        <div class="hero-badge">Personal Finance Tracker</div>
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Free to use &middot; No credit card needed
+        </div>
         <h1 class="hero-title">
-            Know where your<br>
-            <em>money goes</em>
+            Track every rupee.<br>
+            <span class="hero-title-accent">Know where it goes.</span>
         </h1>
         <p class="hero-subtitle">
-            Log expenses, understand your spending patterns,
-            and take control of your financial life —
-            one transaction at a time.
+            Spendly helps you log expenses, spot patterns, and stay
+            on budget — without the spreadsheet headache.
         </p>
         <div class="hero-actions">
-            <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
-            <a href="{{ url_for('login') }}" class="btn-ghost">Sign in</a>
+            <a href="{{ url_for('register') }}" class="hero-btn">Create free account</a>
+            <a href="#" class="hero-btn" id="how-it-works-btn">See how it works</a>
         </div>
     </div>
     <div class="hero-visual">
         <div class="mock-card">
-            <div class="mock-card-header">
-                <span class="mock-label">March 2026</span>
-                <span class="mock-total">₹12,450</span>
+            <div class="mock-card-dots">
+                <span class="mock-dot mock-dot-red"></span>
+                <span class="mock-dot mock-dot-yellow"></span>
+                <span class="mock-dot mock-dot-green"></span>
+            </div>
+            <div class="mock-stats">
+                <div class="mock-stat">
+                    <span class="mock-stat-label">This month</span>
+                    <span class="mock-stat-value">₹18,240</span>
+                    <span class="mock-stat-delta mock-stat-delta-danger">+12% vs last</span>
+                </div>
+                <div class="mock-stat">
+                    <span class="mock-stat-label">Budget left</span>
+                    <span class="mock-stat-value">₹6,760</span>
+                    <span class="mock-stat-delta mock-stat-delta-accent">43% remaining</span>
+                </div>
+                <div class="mock-stat">
+                    <span class="mock-stat-label">Transactions</span>
+                    <span class="mock-stat-value">34</span>
+                    <span class="mock-stat-delta mock-stat-delta-muted">this month</span>
+                </div>
             </div>
             <div class="mock-bars">
                 <div class="mock-bar-row">
-                    <span class="mock-cat">Bills</span>
-                    <div class="mock-bar-track">
-                        <div class="mock-bar" style="width: 72%"></div>
-                    </div>
-                    <span class="mock-amt">₹4,500</span>
-                </div>
-                <div class="mock-bar-row">
                     <span class="mock-cat">Food</span>
                     <div class="mock-bar-track">
-                        <div class="mock-bar mock-bar-2" style="width: 52%"></div>
+                        <div class="mock-bar mock-bar-food" style="width: 78%"></div>
                     </div>
-                    <span class="mock-amt">₹3,200</span>
                 </div>
                 <div class="mock-bar-row">
-                    <span class="mock-cat">Health</span>
+                    <span class="mock-cat">Travel</span>
                     <div class="mock-bar-track">
-                        <div class="mock-bar mock-bar-3" style="width: 33%"></div>
+                        <div class="mock-bar mock-bar-travel" style="width: 60%"></div>
                     </div>
-                    <span class="mock-amt">₹2,050</span>
                 </div>
                 <div class="mock-bar-row">
-                    <span class="mock-cat">Transport</span>
+                    <span class="mock-cat">Bills</span>
                     <div class="mock-bar-track">
-                        <div class="mock-bar mock-bar-4" style="width: 28%"></div>
+                        <div class="mock-bar mock-bar-bills" style="width: 50%"></div>
                     </div>
-                    <span class="mock-amt">₹1,800</span>
                 </div>
             </div>
         </div>
@@ -89,4 +99,52 @@
     </div>
 </section>
 
+<div class="modal-overlay" id="how-it-works-overlay">
+    <div class="modal">
+        <button type="button" class="modal-close" id="how-it-works-close" aria-label="Close video">&times;</button>
+        <div class="modal-video-wrap">
+            <iframe
+                id="how-it-works-video"
+                class="modal-video"
+                data-src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="How Spendly works"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var trigger = document.getElementById('how-it-works-btn');
+    var overlay = document.getElementById('how-it-works-overlay');
+    var closeBtn = document.getElementById('how-it-works-close');
+    var video = document.getElementById('how-it-works-video');
+    var videoSrc = video.getAttribute('data-src');
+
+    function openModal(event) {
+        event.preventDefault();
+        video.setAttribute('src', videoSrc + '?autoplay=1');
+        overlay.classList.add('is-open');
+    }
+
+    function closeModal() {
+        overlay.classList.remove('is-open');
+        video.setAttribute('src', '');
+    }
+
+    trigger.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) {
+            closeModal();
+        }
+    });
+})();
+</script>
 {% endblock %}
