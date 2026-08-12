@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="profile-section">
+    <div class="profile-container">
+
+        <div class="profile-header">
+            <h1 class="profile-name">{{ user["name"] }}</h1>
+            <p class="profile-email">{{ user["email"] }}</p>
+            <p class="profile-since">Member since {{ user["created_at"] | format_date }}</p>
+        </div>
+
+        {% if expenses %}
+        <div class="profile-summary">
+            <div class="profile-total">
+                <span class="profile-total-label">Total spent</span>
+                <span class="profile-total-value">₹{{ '{:,.2f}'.format(total) }}</span>
+            </div>
+            <div class="profile-bars">
+                {% for category, amount in category_totals %}
+                <div class="profile-bar-row">
+                    <span class="profile-cat">{{ category }}</span>
+                    <div class="profile-bar-track">
+                        <div class="profile-bar" style="width: {{ (amount / category_totals[0][1] * 100) | round(1) }}%"></div>
+                    </div>
+                    <span class="profile-bar-amount">₹{{ '{:,.2f}'.format(amount) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="profile-actions">
+            <h2 class="profile-section-title">Your expenses</h2>
+            <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add expense</a>
+        </div>
+
+        {% if expenses %}
+        <div class="profile-table-wrap">
+            <table class="profile-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense["date"] | format_date }}</td>
+                        <td><span class="profile-tag">{{ expense["category"] }}</span></td>
+                        <td>{{ expense["description"] or "—" }}</td>
+                        <td class="profile-amount">₹{{ '{:,.2f}'.format(expense["amount"]) }}</td>
+                        <td class="profile-row-actions">
+                            <a href="{{ url_for('edit_expense', id=expense['id']) }}" class="btn-ghost">Edit</a>
+                            <a href="{{ url_for('delete_expense', id=expense['id']) }}" class="btn-ghost">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="profile-empty">
+            <p>No expenses yet — add your first one to start tracking.</p>
+            <a href="{{ url_for('add_expense') }}" class="btn-primary">Add your first expense</a>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+{% endblock %}

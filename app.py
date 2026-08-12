@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import get_db, close_db
@@ -6,6 +8,16 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "dev-secret-key-change-in-production"  # dev-only; replace with env var in production
 app.teardown_appcontext(close_db)
+
+
+@app.template_filter("format_date")
+def format_date(value):
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(value, fmt).strftime("%b %d, %Y")
+        except ValueError:
+            continue
+    return value
 
 
 # ------------------------------------------------------------------ #
@@ -20,7 +32,7 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if session.get("user_id"):
-        return redirect(url_for("profile"))
+        return redirect(url_for("landing"))
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -57,7 +69,7 @@ def register():
             )
 
         session["user_id"] = cursor.lastrowid
-        return redirect(url_for("profile"))
+        return redirect(url_for("landing"))
 
     return render_template("register.html")
 
@@ -65,7 +77,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("profile"))
+        return redirect(url_for("landing"))
 
     if request.method == "POST":
         email = request.form.get("email", "").strip()
@@ -80,7 +92,7 @@ def login():
 
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
-            return redirect(url_for("profile"))
+            return redirect(url_for("landing"))
 
         return render_template("login.html", error="Invalid email or password.")
 
@@ -109,7 +121,37 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    db = get_db()
+    user = db.execute(
+        "SELECT * FROM users WHERE id = ?", (session["user_id"],)
+    ).fetchone()
+
+    if user is None:
+        session.pop("user_id", None)
+        return redirect(url_for("login"))
+
+    expenses = db.execute(
+        "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC",
+        (session["user_id"],),
+    ).fetchall()
+
+    total = sum(row["amount"] for row in expenses)
+
+    category_sums = {}
+    for row in expenses:
+        category_sums[row["category"]] = category_sums.get(row["category"], 0) + row["amount"]
+    category_totals = sorted(category_sums.items(), key=lambda item: item[1], reverse=True)
+
+    return render_template(
+        "profile.html",
+        user=user,
+        expenses=expenses,
+        total=total,
+        category_totals=category_totals,
+    )
 
 
 @app.route("/expenses/add")
