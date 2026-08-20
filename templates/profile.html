@@ -13,6 +13,43 @@
             <p class="profile-since">Member since {{ user["created_at"] | format_date }}</p>
         </div>
 
+        <div class="profile-edit">
+            <h2 class="profile-section-title">Edit profile</h2>
+
+            {% if edit_error %}
+            <div class="auth-error">{{ edit_error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('profile') }}">
+                <div class="form-group">
+                    <label for="name">Full name</label>
+                    <input type="text" id="name" name="name"
+                           class="form-input" value="{{ user['name'] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email"
+                           class="form-input" value="{{ user['email'] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="current_password">Current password</label>
+                    <input type="password" id="current_password" name="current_password"
+                           class="form-input" placeholder="Required only to change password">
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New password</label>
+                    <input type="password" id="new_password" name="new_password"
+                           class="form-input" placeholder="Leave blank to keep current password">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm new password</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           class="form-input" placeholder="Repeat new password">
+                </div>
+                <button type="submit" class="btn-submit">Save changes</button>
+            </form>
+        </div>
+
         {% if expenses %}
         <div class="profile-summary">
             <div class="profile-total">

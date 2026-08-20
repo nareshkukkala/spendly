@@ -119,7 +119,7 @@ def logout():
     return redirect(url_for("landing"))
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
@@ -132,6 +132,58 @@ def profile():
     if user is None:
         session.pop("user_id", None)
         return redirect(url_for("login"))
+
+    edit_error = None
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        password_hash_to_set = None
+
+        if not name or not email:
+            edit_error = "Name and email are required."
+        elif email != user["email"]:
+            existing = db.execute(
+                "SELECT id FROM users WHERE email = ? AND id != ?",
+                (email, user["id"]),
+            ).fetchone()
+            if existing:
+                edit_error = "An account with that email already exists."
+
+        if not edit_error and new_password:
+            if not current_password or not check_password_hash(
+                user["password_hash"], current_password
+            ):
+                edit_error = "Current password is incorrect."
+            elif len(new_password) < 8:
+                edit_error = "Password must be at least 8 characters."
+            elif new_password != confirm_password:
+                edit_error = "New passwords do not match."
+            else:
+                password_hash_to_set = generate_password_hash(new_password)
+
+        if not edit_error:
+            try:
+                if password_hash_to_set:
+                    db.execute(
+                        "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?",
+                        (name, email, password_hash_to_set, user["id"]),
+                    )
+                else:
+                    db.execute(
+                        "UPDATE users SET name = ?, email = ? WHERE id = ?",
+                        (name, email, user["id"]),
+                    )
+                db.commit()
+            except sqlite3.IntegrityError:
+                edit_error = "An account with that email already exists."
+
+        if not edit_error:
+            return redirect(url_for("profile"))
 
     expenses = db.execute(
         "SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC",
@@ -151,6 +203,7 @@ def profile():
         expenses=expenses,
         total=total,
         category_totals=category_totals,
+        edit_error=edit_error,
     )
 
 
